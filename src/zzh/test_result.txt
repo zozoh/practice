@@ -1,0 +1,37 @@
+OS : Ubunut 10.04
+HW : AMD5400+ 4G
+JDK: Eclipse Run, JDK1.6
+
+插入 5000 条到
+mysql> describe t_abc;
++-------+-------------+------+-----+---------+----------------+
+| Field | Type        | Null | Key | Default | Extra          |
++-------+-------------+------+-----+---------+----------------+
+| id    | int(11)     | NO   | PRI | NULL    | auto_increment |
+| name  | varchar(20) | NO   | UNI | NULL    |                |
++-------+-------------+------+-----+---------+----------------+
+2 rows in set (0.00 sec)
+
+均为 autoCommit=false 时：
+
+a. Nutz POJO 映射                     : 25721ms
+b. Nutz 自定义 SQL -- 单条执行          : 8557ms
+c. Nutz 自定义 SQL -- 多条执行          : 3016ms
+d. JDBC PreparedStatement 单条        : 1141ms
+e. JDBC Statement.addBatch           : 1572ms
+f. JDBC PreparedStatement.addBatch   : 1007ms
+
+------------------------------------------
+因此看出
+
+ * (b) vs (c) : 自定义 SQL，单条执行时，重复的执行 dao.execute 的开销为，每条 SQL 大约多消耗 1ms
+ * (c) vs (d) : 对于 SQL 的解析，以及以及字段类型的转换，每条 SQL 大约消耗 0.4ms
+ * (a) vs (b) : 根据反射拼装 SQL，每个对象，多消耗 3.5ms
+
+并且，随着数据表字段的增多，我想这个数量应该为 n 倍的关系，即 n 为 POJO 的字段数
+
+因此，通过 Dao 执行对对象进行插入操作，每个对象将比用 JDBC 直接操作要慢最多 (3.5+0.4)*$n ms
+即， 4*$n，其中 $n 为 POJO 的数据库字段数
+
+更精确的估算，应该建立另外一个多字段的 POJO ，同这个测试进行比较，才能得出
+

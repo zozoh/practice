@@ -1,0 +1,5 @@
+t_chin {
+	序号 INT +PK,
+	名字 VARCHAR(20) !UNIQUE,
+	描述 VARCHAR(256)
+}

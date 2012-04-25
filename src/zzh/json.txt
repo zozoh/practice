@@ -1,0 +1,4 @@
+{
+  'cmd' : 'fidMaker',
+  'data': {'type':'POST', 'vfids':4294967356}
+}
